@@ -60,22 +60,27 @@ const get_random_string = async () => {
   return Buffer.from(buf).toString('hex')
 }
 
-export const Create = async ({ name }: { name: string }) => {
-  const user_envvars_string = await fs.readFile(
-    path.join(process.cwd(), '.env'),
-    'utf8'
-  )
-  const user_envvars = parse(user_envvars_string)
-  const project_id = user_envvars['PULL_ENV_PROJECT_ID']
-  const project_name = user_envvars['PULL_ENV_PROJECT_NAME']
+export const New = async ({ name }: { name: string }) => {
+  const dir_contents = await fs.readdir(path.join(process.cwd()))
+  const is_env_file_present = dir_contents.includes('.env')
 
-  if (
-    (project_id && project_id.trim() !== '') ||
-    (project_name && project_name.trim() !== '')
-  ) {
-    return console.log(
-      'You already have a project, please use the sync command to update your project'
+  if (is_env_file_present) {
+    const user_envvars_string = await fs.readFile(
+      path.join(process.cwd(), '.env'),
+      'utf8'
     )
+    const user_envvars = parse(user_envvars_string)
+    const project_id = user_envvars['PULL_ENV_PROJECT_ID']
+    const project_name = user_envvars['PULL_ENV_PROJECT_NAME']
+
+    if (
+      (project_id && project_id.trim() !== '') ||
+      (project_name && project_name.trim() !== '')
+    ) {
+      return console.log(
+        'You already have a project, please use the sync command to update your project'
+      )
+    }
   }
 
   const data = await get_pull_env_data()
@@ -88,9 +93,10 @@ export const Create = async ({ name }: { name: string }) => {
   })
 
   if (exists) {
-    return console.log(
+    console.log(
       `Project with name ${name} already exists!, Try some other name`
     )
+    return
   }
 
   const new_project = { id: await get_random_string(), name, env_vars: {} }
@@ -103,12 +109,8 @@ export const Create = async ({ name }: { name: string }) => {
     ])
   )
 
-  const dir_contents = await fs.readdir(path.join(process.cwd()))
-  const is_env_file_present = dir_contents.includes('.env')
-
-  const dot_env_contents = `
-    PULL_ENV_PROJECT_NAME=${new_project.name}
-    PULL_ENV_PROJECT_ID=${new_project.id}
+  const dot_env_contents = `PULL_ENV_PROJECT_NAME=${new_project.name}
+PULL_ENV_PROJECT_ID=${new_project.id}
   `
 
   if (!is_env_file_present) {
@@ -189,7 +191,7 @@ const Pull = async () => {
 
 // }
 
-Create({ name: 'hi' })
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  .then(() => {})
-  .catch((err) => console.log(err))
+// Create({ name: 'hi' })
+//   // eslint-disable-next-line @typescript-eslint/no-empty-function
+//   .then(() => {})
+//   .catch((err) => console.log(err))

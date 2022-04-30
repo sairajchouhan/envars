@@ -2,6 +2,7 @@
 
 import { Command } from 'commander'
 import pkjson from '../../package.json'
+import { New } from '..'
 
 const program = new Command()
 
@@ -11,11 +12,13 @@ program
   .version(pkjson.version)
 
 program
-  .command('create')
-  .description('Create a new project where can save your enviornment variables')
+  .command('new')
+  .description(
+    'Creates a new project where can save your enviornment variables'
+  )
   .option('-n, --name <char>', 'Name of the project')
   .action((options) => {
-    console.log(options)
+    New({ name: options.name })
   })
 
 program.parse()

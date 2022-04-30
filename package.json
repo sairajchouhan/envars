@@ -4,13 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "build": "rm -rf ./dist && tsc"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bin": {
-    "pull-env": "dist/bin/index.js"
+    "pull-env": "dist/src/bin/index.js"
   },
   "devDependencies": {
     "@types/node": "^17.0.30",
