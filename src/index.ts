@@ -22,12 +22,20 @@ const PULL_ENV_DATA_PATH = path.resolve(path.join('.pullenv', 'data.json'))
 
 const get_pull_env_data = async () => {
   const data = await fs.readFile(PULL_ENV_DATA_PATH, 'utf8')
+
+  if (typeof data === 'string' && data.trim() === '') {
+    return []
+  }
+
   const parsed: Array<DataItem> = JSON.parse(data)
   return parsed
 }
 
 const get_project_details = async () => {
-  const user_envvars_string = await fs.readFile(path.join('.env'), 'utf8')
+  const user_envvars_string = await fs.readFile(
+    path.join(process.cwd(), '.env'),
+    'utf8'
+  )
   const user_envvars = parse(user_envvars_string)
   const project_id = user_envvars['PULL_ENV_PROJECT_ID']
   const project_name = user_envvars['PULL_ENV_PROJECT_NAME']
@@ -52,19 +60,70 @@ const get_random_string = async () => {
   return Buffer.from(buf).toString('hex')
 }
 
-const Create = async ({ name }: { name: string }) => {
-  const data = await get_pull_env_data()
+export const Create = async ({ name }: { name: string }) => {
+  const user_envvars_string = await fs.readFile(
+    path.join(process.cwd(), '.env'),
+    'utf8'
+  )
+  const user_envvars = parse(user_envvars_string)
+  const project_id = user_envvars['PULL_ENV_PROJECT_ID']
+  const project_name = user_envvars['PULL_ENV_PROJECT_NAME']
 
-  const empty_json_cond =
-    typeof data === 'object' && Object.keys(data).length === 0
-
-  if (empty_json_cond) {
-    await fs.writeFile(
-      PULL_ENV_DATA_PATH,
-      JSON.stringify([{ id: await get_random_string(), name, env_vars: {} }])
+  if (
+    (project_id && project_id.trim() !== '') ||
+    (project_name && project_name.trim() !== '')
+  ) {
+    return console.log(
+      'You already have a project, please use the sync command to update your project'
     )
   }
-  console.log('Created a new Project with name: ', name)
+
+  const data = await get_pull_env_data()
+
+  let exists = false
+  data.forEach((item) => {
+    if (item.name === name) {
+      exists = true
+    }
+  })
+
+  if (exists) {
+    return console.log(
+      `Project with name ${name} already exists!, Try some other name`
+    )
+  }
+
+  const new_project = { id: await get_random_string(), name, env_vars: {} }
+
+  await fs.writeFile(
+    PULL_ENV_DATA_PATH,
+    JSON.stringify([
+      ...data,
+      { id: await get_random_string(), name, env_vars: {} },
+    ])
+  )
+
+  const dir_contents = await fs.readdir(path.join(process.cwd()))
+  const is_env_file_present = dir_contents.includes('.env')
+
+  const dot_env_contents = `
+    PULL_ENV_PROJECT_NAME=${new_project.name}
+    PULL_ENV_PROJECT_ID=${new_project.id}
+  `
+
+  if (!is_env_file_present) {
+    await fs.writeFile(path.join(process.cwd(), '.env'), dot_env_contents)
+    console.log(`
+    Created a new project with name ${new_project.name}
+    Created a .env file with PULL_ENV_PROJECT_NAME and PULL_ENV_PROJECT_ID enviornment variables
+  `)
+  } else {
+    await fs.appendFile(path.join(process.cwd(), '.env'), dot_env_contents)
+    console.log(`
+    Created a new project with name ${new_project.name}
+    .env file already exists!!, added PULL_ENV_PROJECT_NAME and PULL_ENV_PROJECT_ID enviornment variables
+  `)
+  }
 }
 
 const Sync = async () => {
@@ -130,8 +189,7 @@ const Pull = async () => {
 
 // }
 
-Pull()
-  .then(() => {
-    console.log('\n\nsuccess')
-  })
+Create({ name: 'hi' })
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  .then(() => {})
   .catch((err) => console.log(err))
