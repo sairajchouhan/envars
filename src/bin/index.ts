@@ -2,7 +2,7 @@
 
 import { Command } from 'commander'
 import pkjson from '../../package.json'
-import { New } from '..'
+import { List, New, Sync } from '..'
 
 const program = new Command()
 
@@ -16,9 +16,23 @@ program
   .description(
     'Creates a new project where can save your enviornment variables'
   )
-  .option('-n, --name <char>', 'Name of the project')
+  .requiredOption('-n, --name <char>', 'Name of the project')
   .action((options) => {
     New({ name: options.name })
+  })
+
+program
+  .command('sync')
+  .description('Syncs enviornment variables to data store')
+  .action(() => {
+    Sync()
+  })
+
+program
+  .command('list')
+  .description('Lists all the projects')
+  .action(() => {
+    List()
   })
 
 program.parse()

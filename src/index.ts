@@ -101,46 +101,38 @@ export const New = async ({ name }: { name: string }) => {
 
   const new_project = { id: await get_random_string(), name, env_vars: {} }
 
-  await fs.writeFile(
-    PULL_ENV_DATA_PATH,
-    JSON.stringify([
-      ...data,
-      { id: await get_random_string(), name, env_vars: {} },
-    ])
-  )
+  await fs.writeFile(PULL_ENV_DATA_PATH, JSON.stringify([...data, new_project]))
 
   const dot_env_contents = `PULL_ENV_PROJECT_NAME=${new_project.name}
-PULL_ENV_PROJECT_ID=${new_project.id}
-  `
+PULL_ENV_PROJECT_ID=${new_project.id}`
 
   if (!is_env_file_present) {
     await fs.writeFile(path.join(process.cwd(), '.env'), dot_env_contents)
-    console.log(`
-    Created a new project with name ${new_project.name}
-    Created a .env file with PULL_ENV_PROJECT_NAME and PULL_ENV_PROJECT_ID enviornment variables
+    console.log(`Created a new project with name ${new_project.name}
+Created a .env file with PULL_ENV_PROJECT_NAME and PULL_ENV_PROJECT_ID enviornment variables
   `)
   } else {
     await fs.appendFile(path.join(process.cwd(), '.env'), dot_env_contents)
-    console.log(`
-    Created a new project with name ${new_project.name}
-    .env file already exists!!, added PULL_ENV_PROJECT_NAME and PULL_ENV_PROJECT_ID enviornment variables
+    console.log(`Created a new project with name ${new_project.name} 
+.env file already exists!!, added PULL_ENV_PROJECT_NAME and PULL_ENV_PROJECT_ID enviornment variables
   `)
   }
 }
 
-const Sync = async () => {
+export const Sync = async () => {
   const project_details = await get_project_details()
 
   if (!project_details) return
 
   const { project_id, user_envvars } = project_details
+  const parsed = await get_pull_env_data()
 
-  const data = await fs.readFile(PULL_ENV_DATA_PATH, 'utf8')
-  const parsed: Array<DataItem> = JSON.parse(data)
   const project = parsed.find((item) => item.id === project_id)
 
   if (!project) {
-    return console.log('No Project Data')
+    return console.log(
+      "The current project that is specified in '.env' file is not found in store"
+    )
   }
 
   const updated_envvars = {
@@ -148,18 +140,23 @@ const Sync = async () => {
     ...user_envvars,
   }
 
-  const item = parsed.find((item) => item.id === project_id)
-
-  if (!item) return
-  const index = parsed.indexOf(item)
+  const index = parsed.indexOf(project)
 
   parsed[index].env_vars = updated_envvars
 
   await fs.writeFile(PULL_ENV_DATA_PATH, JSON.stringify(parsed), 'utf8')
+
+  console.log('Environment variables synced')
 }
 
-const List = async () => {
+export const List = async () => {
   const data = await get_pull_env_data()
+
+  if (data.length === 0) {
+    return console.log(
+      "No Projects found, try creating one using 'new' command"
+    )
+  }
 
   console.log('Your Projects')
   data.forEach((i) => {
