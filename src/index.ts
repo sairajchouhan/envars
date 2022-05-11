@@ -209,7 +209,33 @@ export const Pull = async ({ name }: { name: string }) => {
   }
 }
 
-// const Delete = async ({ name }: { name: string }) => {}
-Pull({
-  name: 'newpone',
-}).catch((err) => console.error(err.message))
+const Delete = async () => {
+  const data = await get_pull_env_data()
+
+  if (data.length === 0) {
+    return console.log(
+      "No Projects found, try creating one using 'new' command"
+    )
+  }
+
+  const ans = await inquirer.prompt([
+    {
+      name: 'to_delete',
+      type: 'list',
+      choices: data.map((item) => item.name),
+    },
+  ])
+
+  const index = data.findIndex((item) => item.name === ans.to_delete)
+  delete data[index]
+
+  await writeFile(
+    PULL_ENV_DATA_PATH,
+    JSON.stringify(data.length > 0 ? data : []),
+    'utf8'
+  )
+
+  console.log(`Project ${ans.to_delete} deleted`)
+}
+
+Delete().catch((err) => console.error(err.message))
