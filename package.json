@@ -1,5 +1,5 @@
 {
-  "name": "pull-env",
+  "name": "@sairaj2119/envars",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "bin": {
-    "pull-env": "./dist/src/bin/index.js"
+    "envars": "./dist/src/bin/index.js"
   },
   "devDependencies": {
     "@types/inquirer": "^8.2.1",

@@ -19,7 +19,7 @@ interface DataItemEnvVar {
   [name: string]: string
 }
 
-const PULL_ENV_DATA_PATH = path.resolve(path.join('.pullenv', 'data.json'))
+const PULL_ENV_DATA_PATH = path.resolve(path.join('.envars', 'data.json'))
 
 const get_pull_env_data = async () => {
   const data = await readFile(PULL_ENV_DATA_PATH, 'utf8')
