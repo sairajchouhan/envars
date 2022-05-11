@@ -4,10 +4,11 @@
 // - pull
 // - delete
 
-import fs from 'fs/promises'
 import path from 'path'
 import { randomBytes } from 'crypto'
 import { parse } from 'dotenv'
+import { readFile, writeFile, appendFile, readdir } from 'fs/promises'
+import inquirer from 'inquirer'
 
 interface DataItem {
   id: string
@@ -21,7 +22,7 @@ interface DataItemEnvVar {
 const PULL_ENV_DATA_PATH = path.resolve(path.join('.pullenv', 'data.json'))
 
 const get_pull_env_data = async () => {
-  const data = await fs.readFile(PULL_ENV_DATA_PATH, 'utf8')
+  const data = await readFile(PULL_ENV_DATA_PATH, 'utf8')
 
   if (typeof data === 'string' && data.trim() === '') {
     return []
@@ -31,8 +32,8 @@ const get_pull_env_data = async () => {
   return parsed
 }
 
-const get_project_details = async () => {
-  const user_envvars_string = await fs.readFile(
+const get_user_envvars_details = async () => {
+  const user_envvars_string = await readFile(
     path.join(process.cwd(), '.env'),
     'utf8'
   )
@@ -60,12 +61,22 @@ const get_random_string = async () => {
   return Buffer.from(buf).toString('hex')
 }
 
+const read_users_dot_env = async () => {
+  const user_envvars_string = await readFile(
+    path.join(process.cwd(), '.env'),
+    'utf8'
+  )
+  const user_envvars = parse(user_envvars_string)
+
+  return user_envvars
+}
+
 export const New = async ({ name }: { name: string }) => {
-  const dir_contents = await fs.readdir(path.join(process.cwd()))
+  const dir_contents = await readdir(path.join(process.cwd()))
   const is_env_file_present = dir_contents.includes('.env')
 
   if (is_env_file_present) {
-    const user_envvars_string = await fs.readFile(
+    const user_envvars_string = await readFile(
       path.join(process.cwd(), '.env'),
       'utf8'
     )
@@ -101,18 +112,18 @@ export const New = async ({ name }: { name: string }) => {
 
   const new_project = { id: await get_random_string(), name, env_vars: {} }
 
-  await fs.writeFile(PULL_ENV_DATA_PATH, JSON.stringify([...data, new_project]))
+  await writeFile(PULL_ENV_DATA_PATH, JSON.stringify([...data, new_project]))
 
   const dot_env_contents = `PULL_ENV_PROJECT_NAME=${new_project.name}
 PULL_ENV_PROJECT_ID=${new_project.id}`
 
   if (!is_env_file_present) {
-    await fs.writeFile(path.join(process.cwd(), '.env'), dot_env_contents)
+    await writeFile(path.join(process.cwd(), '.env'), dot_env_contents)
     console.log(`Created a new project with name ${new_project.name}
 Created a .env file with PULL_ENV_PROJECT_NAME and PULL_ENV_PROJECT_ID enviornment variables
   `)
   } else {
-    await fs.appendFile(path.join(process.cwd(), '.env'), dot_env_contents)
+    await appendFile(path.join(process.cwd(), '.env'), dot_env_contents)
     console.log(`Created a new project with name ${new_project.name} 
 .env file already exists!!, added PULL_ENV_PROJECT_NAME and PULL_ENV_PROJECT_ID enviornment variables
   `)
@@ -120,7 +131,7 @@ Created a .env file with PULL_ENV_PROJECT_NAME and PULL_ENV_PROJECT_ID enviornme
 }
 
 export const Sync = async () => {
-  const project_details = await get_project_details()
+  const project_details = await get_user_envvars_details()
 
   if (!project_details) return
 
@@ -144,7 +155,7 @@ export const Sync = async () => {
 
   parsed[index].env_vars = updated_envvars
 
-  await fs.writeFile(PULL_ENV_DATA_PATH, JSON.stringify(parsed), 'utf8')
+  await writeFile(PULL_ENV_DATA_PATH, JSON.stringify(parsed), 'utf8')
 
   console.log('Environment variables synced')
 }
@@ -164,31 +175,41 @@ export const List = async () => {
   })
 }
 
-const Pull = async () => {
-  const project_details = await get_project_details()
-  if (!project_details) return
-  const { project_id } = project_details
-
-  const data = await fs.readFile(PULL_ENV_DATA_PATH, 'utf8')
+export const Pull = async ({ name }: { name: string }) => {
+  const data = await readFile(PULL_ENV_DATA_PATH, 'utf8')
   const parsed: Array<DataItem> = JSON.parse(data)
-  const project = parsed.find((item) => item.id === project_id)
+  const project = parsed.find((item) => item.name === name)
 
   if (!project) {
     return console.log('No Project Data')
   }
 
+  const user_envvars = await read_users_dot_env()
+
   const content = Object.keys(project.env_vars)
     .map((key) => `${key}=${project.env_vars[key]}`)
     .join('\n')
 
-  await fs.writeFile(path.join('.env'), content)
+  if (Object.keys(user_envvars).length > 0) {
+    const ans = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'override',
+        message:
+          'You have few environment variables already, would you like to override it',
+        choices: ['Yes', 'No'],
+      },
+    ])
+
+    if ((ans.override as string).toLowerCase() === 'yes') {
+      await writeFile(path.join('.env'), content)
+    } else {
+      await appendFile(path.join(process.cwd(), '.env'), content)
+    }
+  }
 }
 
-// const Delete = async () => {
-
-// }
-
-// Create({ name: 'hi' })
-//   // eslint-disable-next-line @typescript-eslint/no-empty-function
-//   .then(() => {})
-//   .catch((err) => console.log(err))
+// const Delete = async ({ name }: { name: string }) => {}
+Pull({
+  name: 'newpone',
+}).catch((err) => console.error(err.message))
