@@ -1,5 +1,5 @@
 node_modules
-.envars
 dist
 .pnpm-debug.log
 .env
+.envars.json

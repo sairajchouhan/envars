@@ -5,10 +5,11 @@
 // - delete
 
 import path from 'path'
-import { randomBytes } from 'crypto'
+import { get_random_string } from './utils'
 import { parse } from 'dotenv'
 import { readFile, writeFile, appendFile, readdir } from 'fs/promises'
 import inquirer from 'inquirer'
+import { DATA_FILE_PATH } from './constants'
 
 interface DataItem {
   id: string
@@ -19,16 +20,30 @@ interface DataItemEnvVar {
   [name: string]: string
 }
 
-const PULL_ENV_DATA_PATH = path.resolve(path.join('.envars', 'data.json'))
+interface Project {
+  project_id: string
+  project_name: string
+  items: Array<EnvFile>
+}
 
-const get_pull_env_data = async () => {
-  const data = await readFile(PULL_ENV_DATA_PATH, 'utf8')
+interface EnvFile {
+  file_name: string
+  envars: Array<EnvVarKeyValuePair>
+}
+
+type EnvVarKeyValuePair = {
+  key: string
+  value: string
+}
+
+const get_data_from_store = async () => {
+  const data = await readFile(DATA_FILE_PATH, 'utf8')
 
   if (typeof data === 'string' && data.trim() === '') {
     return []
   }
 
-  const parsed: Array<DataItem> = JSON.parse(data)
+  const parsed: Array<Project> = JSON.parse(data)
   return parsed
 }
 
@@ -56,11 +71,6 @@ const get_user_envvars_details = async () => {
   return { project_id, project_name, user_envvars }
 }
 
-const get_random_string = async () => {
-  const buf = randomBytes(32)
-  return Buffer.from(buf).toString('hex')
-}
-
 const read_users_dot_env = async () => {
   const user_envvars_string = await readFile(
     path.join(process.cwd(), '.env'),
@@ -71,98 +81,70 @@ const read_users_dot_env = async () => {
   return user_envvars
 }
 
-export const New = async ({ name }: { name: string }) => {
-  const dir_contents = await readdir(path.join(process.cwd()))
-  const is_env_file_present = dir_contents.includes('.env')
-
-  if (is_env_file_present) {
-    const user_envvars_string = await readFile(
-      path.join(process.cwd(), '.env'),
-      'utf8'
-    )
-    const user_envvars = parse(user_envvars_string)
-    const project_id = user_envvars['PULL_ENV_PROJECT_ID']
-    const project_name = user_envvars['PULL_ENV_PROJECT_NAME']
-
-    if (
-      (project_id && project_id.trim() !== '') ||
-      (project_name && project_name.trim() !== '')
-    ) {
-      return console.log(
-        'You already have a project, please use the sync command to update your project'
-      )
-    }
-  }
-
-  const data = await get_pull_env_data()
-
-  let exists = false
-  data.forEach((item) => {
-    if (item.name === name) {
-      exists = true
-    }
+export const New = async () => {
+  const resp = await inquirer.prompt({
+    name: 'project_name',
+    type: 'input',
+    message: 'Enter project name: ',
   })
 
-  if (exists) {
-    console.log(
-      `Project with name ${name} already exists!, Try some other name`
-    )
-    return
-  }
+  const projects = await get_data_from_store()
 
-  const new_project = { id: await get_random_string(), name, env_vars: {} }
+  const all_project_names = projects.map((item) =>
+    item.project_name.toLowerCase()
+  )
 
-  await writeFile(PULL_ENV_DATA_PATH, JSON.stringify([...data, new_project]))
-
-  const dot_env_contents = `PULL_ENV_PROJECT_NAME=${new_project.name}
-PULL_ENV_PROJECT_ID=${new_project.id}`
-
-  if (!is_env_file_present) {
-    await writeFile(path.join(process.cwd(), '.env'), dot_env_contents)
-    console.log(`Created a new project with name ${new_project.name}
-Created a .env file with PULL_ENV_PROJECT_NAME and PULL_ENV_PROJECT_ID enviornment variables
-  `)
-  } else {
-    await appendFile(path.join(process.cwd(), '.env'), dot_env_contents)
-    console.log(`Created a new project with name ${new_project.name} 
-.env file already exists!!, added PULL_ENV_PROJECT_NAME and PULL_ENV_PROJECT_ID enviornment variables
-  `)
-  }
-}
-
-export const Sync = async () => {
-  const project_details = await get_user_envvars_details()
-
-  console.log(project_details)
-  if (project_details === null) return
-
-  const { project_id, user_envvars } = project_details
-  const parsed = await get_pull_env_data()
-
-  const project = parsed.find((item) => item.id === project_id)
-
-  if (!project) {
-    return console.log(
-      "The current project that is specified in '.env' file is not found in store"
+  if (all_project_names.includes(resp.project_name.toLowerCase())) {
+    return console.error(
+      `Project with name ${resp.project_name} already exists`
     )
   }
 
-  const updated_envvars = {
-    ...project.env_vars,
-    ...user_envvars,
+  const new_project = {
+    project_id: await get_random_string(),
+    project_name: resp.project_name,
+    items: [],
   }
 
-  const index = parsed.indexOf(project)
+  const updated_projects = [...projects, new_project]
+  await writeFile(DATA_FILE_PATH, JSON.stringify(updated_projects))
 
-  parsed[index].env_vars = updated_envvars
-
-  await writeFile(PULL_ENV_DATA_PATH, JSON.stringify(parsed), 'utf8')
-
-  console.log('Environment variables synced')
+  console.log(`Project ${new_project.project_name} created successfully`)
 }
+
+// export const Sync = async () => {
+//   const project_details = await get_user_envvars_details()
+
+//   console.log(project_details)
+//   if (project_details === null) return
+
+//   const { project_id, user_envvars } = project_details
+//   const parsed = await get_data_from_store()
+
+//   const project = parsed.find((item) => item.id === project_id)
+
+//   if (!project) {
+//     return console.log(
+//       "The current project that is specified in '.env' file is not found in store"
+//     )
+//   }
+
+//   const updated_envvars = {
+//     ...project.env_vars,
+//     ...user_envvars,
+//   }
+
+//   const index = parsed.indexOf(project)
+
+//   parsed[index].env_vars = updated_envvars
+
+//   await writeFile(DATA_FILE_PATH, JSON.stringify(parsed), 'utf8')
+
+//   console.log('Environment variables synced')
+// }
 
 export const List = async () => {
-  const data = await get_pull_env_data()
+  const data = await get_data_from_store()
 
   if (data.length === 0) {
     return console.log(
@@ -171,13 +153,13 @@ export const List = async () => {
   }
 
   console.log('Your Projects')
-  data.forEach((i) => {
-    console.log(`=> ${i.name}\n`)
-  })
+  // data.forEach((i) => {
+  //   console.log(`=> ${i.name}\n`)
+  // })
 }
 
 export const Pull = async ({ name }: { name: string }) => {
-  const data = await readFile(PULL_ENV_DATA_PATH, 'utf8')
+  const data = await readFile(DATA_FILE_PATH, 'utf8')
   const parsed: Array<DataItem> = JSON.parse(data)
   const project = parsed.find((item) => item.name === name)
 
@@ -210,8 +192,8 @@ export const Pull = async ({ name }: { name: string }) => {
   }
 }
 
-const Delete = async () => {
-  const data = await get_pull_env_data()
+export const Delete = async () => {
+  const data = await get_data_from_store()
 
   if (data.length === 0) {
     return console.log(
@@ -219,24 +201,22 @@ const Delete = async () => {
     )
   }
 
-  const ans = await inquirer.prompt([
-    {
-      name: 'to_delete',
-      type: 'list',
-      choices: data.map((item) => item.name),
-    },
-  ])
+  // const ans = await inquirer.prompt([
+  //   {
+  //     name: 'to_delete',
+  //     type: 'list',
+  //     choices: data.map((item) => item.name),
+  //   },
+  // ])
 
-  const index = data.findIndex((item) => item.name === ans.to_delete)
-  delete data[index]
+  // const index = data.findIndex((item) => item.name === ans.to_delete)
+  // delete data[index]
 
   await writeFile(
-    PULL_ENV_DATA_PATH,
+    DATA_FILE_PATH,
     JSON.stringify(data.length > 0 ? data : []),
     'utf8'
   )
-
-  console.log(`Project ${ans.to_delete} deleted`)
 }
 
-Sync().catch((err) => console.error(err.message))
+New().catch((err) => console.error(err))
