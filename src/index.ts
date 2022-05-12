@@ -193,30 +193,33 @@ export const Pull = async ({ name }: { name: string }) => {
 }
 
 export const Delete = async () => {
-  const data = await get_data_from_store()
+  const projects = await get_data_from_store()
 
-  if (data.length === 0) {
+  if (projects.length === 0) {
     return console.log(
       "No Projects found, try creating one using 'new' command"
     )
   }
 
-  // const ans = await inquirer.prompt([
-  //   {
-  //     name: 'to_delete',
-  //     type: 'list',
-  //     choices: data.map((item) => item.name),
-  //   },
-  // ])
+  const resp = await inquirer.prompt({
+    name: 'to_delete',
+    message: 'Enter project name to delete: ',
+    type: 'list',
+    choices: projects.map((item) => item.project_name),
+  })
 
-  // const index = data.findIndex((item) => item.name === ans.to_delete)
-  // delete data[index]
+  const updated_projects = projects.filter(
+    (item) => item.project_name !== resp.to_delete
+  )
 
   await writeFile(
     DATA_FILE_PATH,
-    JSON.stringify(data.length > 0 ? data : []),
+    JSON.stringify(updated_projects.length > 0 ? updated_projects : []),
     'utf8'
   )
+
+  console.log(`Project ${resp.to_delete} deleted successfully`)
 }
 
-New().catch((err) => console.error(err))
+// Delete().catch((err) => console.error(err))
+Delete().catch((err) => console.error(err))
