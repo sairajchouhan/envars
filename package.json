@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon",
-    "build": "rm -rf ./dist && tsc"
+    "build": "rm -rf ./dist && tsc",
+    "postinstall": "node -r esbuild-register ./src/setup.ts"
   },
   "keywords": [],
   "author": "",

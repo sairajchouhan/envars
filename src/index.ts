@@ -133,7 +133,8 @@ Created a .env file with PULL_ENV_PROJECT_NAME and PULL_ENV_PROJECT_ID enviornme
 export const Sync = async () => {
   const project_details = await get_user_envvars_details()
 
-  if (!project_details) return
+  console.log(project_details)
+  if (project_details === null) return
 
   const { project_id, user_envvars } = project_details
   const parsed = await get_pull_env_data()
@@ -238,4 +239,4 @@ const Delete = async () => {
   console.log(`Project ${ans.to_delete} deleted`)
 }
 
-Delete().catch((err) => console.error(err.message))
+Sync().catch((err) => console.error(err.message))
