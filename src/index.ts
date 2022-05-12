@@ -7,7 +7,7 @@
 import path from 'path'
 import { get_random_string } from './utils'
 import { parse } from 'dotenv'
-import { readFile, writeFile, appendFile, readdir } from 'fs/promises'
+import { readFile, writeFile, appendFile } from 'fs/promises'
 import inquirer from 'inquirer'
 import { DATA_FILE_PATH } from './constants'
 
@@ -153,9 +153,9 @@ export const List = async () => {
   }
 
   console.log('Your Projects')
-  // data.forEach((i) => {
-  //   console.log(`=> ${i.name}\n`)
-  // })
+  data.forEach((i) => {
+    console.log(`${i.project_name}\n`)
+  })
 }
 
 export const Pull = async ({ name }: { name: string }) => {
@@ -221,5 +221,4 @@ export const Delete = async () => {
   console.log(`Project ${resp.to_delete} deleted successfully`)
 }
 
-// Delete().catch((err) => console.error(err))
-Delete().catch((err) => console.error(err))
+List().catch((err) => console.error(err))
