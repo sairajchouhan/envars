@@ -7,7 +7,7 @@
 import path from 'path'
 import { get_random_string } from './utils'
 import { parse } from 'dotenv'
-import { readFile, writeFile, appendFile } from 'fs/promises'
+import { readFile, writeFile, appendFile, readdir } from 'fs/promises'
 import inquirer from 'inquirer'
 import { DATA_FILE_PATH } from './constants'
 
@@ -82,6 +82,31 @@ const read_users_dot_env = async () => {
 }
 
 export const New = async () => {
+  // check if user already has .envars.json file
+  const user_files = await readdir(process.cwd())
+
+  if (user_files.includes('.envars.json')) {
+    const project_details_unparsed = await readFile(
+      path.join(process.cwd(), '.envars.json'),
+      'utf8'
+    )
+
+    const project_details =
+      project_details_unparsed === ''
+        ? {}
+        : JSON.parse(project_details_unparsed)
+
+    const a: string = project_details.project_id
+    const b: string = project_details.project_name
+
+    if (a && b && a.trim() !== '' && b.trim() !== '') {
+      console.log('A project already exists in the current directory')
+      console.log(project_details)
+      console.log(`Project Name: ${project_details.project_name}`)
+      return
+    }
+  }
+
   const resp = await inquirer.prompt({
     name: 'project_name',
     type: 'input',
@@ -108,6 +133,25 @@ export const New = async () => {
 
   const updated_projects = [...projects, new_project]
   await writeFile(DATA_FILE_PATH, JSON.stringify(updated_projects))
+
+  await writeFile(
+    path.join(process.cwd(), '.envars.json'),
+    JSON.stringify({
+      project_id: new_project.project_id,
+      project_name: new_project.project_name,
+    })
+  )
+
+  if (user_files.includes('.gitignore')) {
+    console.log(
+      '.gitignore file already exists, added .envars.json to .gitignore'
+    )
+
+    await appendFile(path.join(process.cwd(), '.gitignore'), `\n.envars.json`)
+  } else {
+    console.log('Created a .gitignore file in your project root directory')
+    await writeFile(path.join(process.cwd(), '.gitignore'), `.envars.json\n`)
+  }
 
   console.log(`Project ${new_project.project_name} created successfully`)
 }
@@ -221,4 +265,4 @@ export const Delete = async () => {
   console.log(`Project ${resp.to_delete} deleted successfully`)
 }
 
-List().catch((err) => console.error(err))
+New().catch((err) => console.error(err))
