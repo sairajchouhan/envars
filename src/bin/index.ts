@@ -2,7 +2,7 @@
 
 import { Command } from 'commander'
 import pkjson from '../../package.json'
-import { List, New, Sync } from '..'
+import { List, New, Pull, Sync, Delete } from '..'
 
 const program = new Command()
 
@@ -37,10 +37,15 @@ program
 program
   .command('pull')
   .description('Pull enviornment variables from store')
-  .requiredOption('-n, --name <char>', 'Name of the project')
-  .action((options) => {
-    // Pull({ name: options.name })
-    console.log(options)
+  .action(() => {
+    Pull()
+  })
+
+program
+  .command('delete')
+  .description('Delete a project')
+  .action(() => {
+    Delete()
   })
 
 program.parse()
