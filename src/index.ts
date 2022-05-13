@@ -1,8 +1,14 @@
 import path from 'path'
-import { get_random_string } from './utils'
 import { readFile, writeFile, appendFile, readdir } from 'fs/promises'
 import inquirer from 'inquirer'
+import { parse } from 'dotenv'
+
 import { DATA_FILE_PATH, PROJECT_IDENTIFIER_FILE_NAME } from './constants'
+import {
+  get_random_string,
+  get_user_current_project_details,
+  serach_env_files,
+} from './utils'
 
 interface Project {
   project_id: string
@@ -32,7 +38,6 @@ const get_data_from_store = async () => {
 }
 
 export const New = async () => {
-  // check if user already has .envars.json file
   const user_files = await readdir(process.cwd())
 
   if (user_files.includes(PROJECT_IDENTIFIER_FILE_NAME)) {
@@ -105,43 +110,56 @@ export const New = async () => {
     console.log('Created a .gitignore file in your project root directory')
     await writeFile(
       path.join(process.cwd(), '.gitignore'),
-      ` ${PROJECT_IDENTIFIER_FILE_NAME}\n`
+      `${PROJECT_IDENTIFIER_FILE_NAME}\n`
     )
   }
 
   console.log(`Project ${new_project.project_name} created successfully`)
 }
 
-// export const Sync = async () => {
-//   const project_details = await get_user_envvars_details()
+// TODO: create a type file that has the currently env variables types, so that the user can get some autocompelte
+export const Sync = async () => {
+  console.log('Syncing project...')
+  const project_details = await get_user_current_project_details()
 
-//   console.log(project_details)
-//   if (project_details === null) return
+  if (!project_details) {
+    return
+  }
 
-//   const { project_id, user_envvars } = project_details
-//   const parsed = await get_data_from_store()
+  const { project_id } = project_details
+  const projects = await get_data_from_store()
+  const project = projects.find((item) => item.project_id === project_id)
 
-//   const project = parsed.find((item) => item.id === project_id)
+  if (!project) {
+    return console.error(`Project with id ${project_id} not found`)
+  }
 
-//   if (!project) {
-//     return console.log(
-//       "The current project that is specified in '.env' file is not found in store"
-//     )
-//   }
+  const projectIndex = projects.indexOf(project)
 
-//   const updated_envvars = {
-//     ...project.env_vars,
-//     ...user_envvars,
-//   }
+  const env_files = await serach_env_files()
+  if (env_files.length === 0) {
+    return console.error('No env files found')
+  }
 
-//   const index = parsed.indexOf(project)
+  const file_read_promises = env_files.map(async (file) => {
+    const file_content = await readFile(path.join(process.cwd(), file), 'utf8')
+    const parsed = parse(file_content)
+    return {
+      file_name: file,
+      envars: Object.entries(parsed).map(([key, value]) => ({
+        key,
+        value,
+      })),
+    }
+  })
 
-//   parsed[index].env_vars = updated_envvars
+  const items = await Promise.all(file_read_promises)
+  projects[projectIndex].items = items
 
-//   await writeFile(DATA_FILE_PATH, JSON.stringify(parsed), 'utf8')
+  await writeFile(DATA_FILE_PATH, JSON.stringify(projects))
 
-//   console.log('Environment variables synced')
-// }
+  console.log(`Synced files ${env_files.map((file) => `${file} `).join('')}`)
+}
 
 export const List = async () => {
   const data = await get_data_from_store()
@@ -187,4 +205,4 @@ export const Delete = async () => {
   console.log(`Project ${resp.to_delete} deleted successfully`)
 }
 
-New().catch((err) => console.error(err))
+Sync().catch((err) => console.error(err))

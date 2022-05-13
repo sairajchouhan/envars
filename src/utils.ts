@@ -9,29 +9,28 @@ export const get_random_string = async () => {
   return Buffer.from(buf).toString('hex')
 }
 
-// TODO: should inspect this
-export const get_user_envvars_details = async () => {
-  const user_envvars_string = await readFile(
-    path.join(process.cwd(), '.env'),
+export const get_user_current_project_details = async () => {
+  const project_details_unparsed = await readFile(
+    path.join(process.cwd(), PROJECT_IDENTIFIER_FILE_NAME),
     'utf8'
   )
-  const user_envvars = parse(user_envvars_string)
-  const project_id = user_envvars['PULL_ENV_PROJECT_ID']
-  const project_name = user_envvars['PULL_ENV_PROJECT_NAME']
 
-  if (
-    !project_id ||
-    !project_name ||
-    project_id.trim() === '' ||
-    project_name.trim() === ''
-  ) {
-    console.error(
-      'Some enviormnet variables that that are used by pull-env are missing, kindly confirm that you have PULL_ENV_PROJECT_ID, PULL_ENV_PROJECT_NAME enviornment variables configured in you .env file'
+  const project_details: {
+    project_id: string
+    project_name: string
+  } = JSON.parse(project_details_unparsed)
+
+  const project_id = project_details.project_id
+  const project_name = project_details.project_name
+
+  if (!project_id.trim() || !project_name.trim()) {
+    console.warn(
+      `Project is not initialized, or the data in ${PROJECT_IDENTIFIER_FILE_NAME} has been corrupted`
     )
-    return null
+    return
   }
 
-  return { project_id, project_name, user_envvars }
+  return { project_id, project_name }
 }
 
 // TODO: take this as a reference when you make new Pull command
@@ -80,7 +79,7 @@ export const read_users_dot_env = async () => {
 }
 
 export const serach_env_files = async () => {
-  console.log('Searching for files that start with .env')
+  // console.log('Searching for files that start with .env')
   const files = await readdir(path.join(process.cwd()))
 
   let env_files = files.filter((file) => file.startsWith('.env'))
@@ -92,10 +91,10 @@ export const serach_env_files = async () => {
 
   env_files = env_files.filter((file) => file !== PROJECT_IDENTIFIER_FILE_NAME)
 
-  console.log('Found following files:')
-  env_files.forEach((file) => {
-    console.log(file)
-  })
+  // console.log('Found following files:')
+  // env_files.forEach((file) => {
+  //   console.log(file)
+  // })
 
   return env_files
 }
