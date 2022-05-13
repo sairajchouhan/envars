@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander'
-import pkjson from '../../package.json'
-import { List, New, Pull, Sync, Delete } from '..'
+import pkjson from '../package.json'
+import { List, New, Pull, Sync, Delete } from './index'
 
 const program = new Command()
 
