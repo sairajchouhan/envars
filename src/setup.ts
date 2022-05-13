@@ -22,6 +22,4 @@ export const setup = async () => {
   }
 }
 
-// setup()
-//   .then((data) => console.log(data))
-//   .catch((err) => console.error(err))
+setup()
