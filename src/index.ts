@@ -135,6 +135,81 @@ export const Sync = async () => {
   console.log(`Synced files ${env_files.map((file) => `${file} `).join('')}`)
 }
 
+export const Pull = async () => {
+  const user_files = await readdir(process.cwd())
+
+  if (user_files.includes(PROJECT_IDENTIFIER_FILE_NAME)) {
+    return console.log(
+      'Project is already initialized, please use sync command to sync your enviorment vairables'
+    )
+  }
+
+  const store_data = await get_data_from_store()
+  const choices = store_data.map((item) => item.project_name)
+
+  const resp = await inquirer.prompt({
+    type: 'list',
+    name: 'project_name',
+    message: 'Select project to pull from: ',
+    choices,
+  })
+
+  const project = store_data.find(
+    (item) =>
+      item.project_name.toLowerCase() === resp.project_name.toLowerCase()
+  )
+
+  if (!project) {
+    return console.error(`Project with name ${resp.project_name} not found`)
+  }
+
+  await writeFile(
+    path.join(process.cwd(), PROJECT_IDENTIFIER_FILE_NAME),
+    JSON.stringify({
+      project_id: project.project_id,
+      project_name: project.project_name,
+    })
+  )
+
+  console.log('Created .envars.json file in your project root directory')
+
+  if (user_files.includes('.gitignore')) {
+    console.log(
+      '.gitignore file already exists, added .envars.json to .gitignore'
+    )
+
+    await appendFile(
+      path.join(process.cwd(), '.gitignore'),
+      `\n${PROJECT_IDENTIFIER_FILE_NAME}`
+    )
+  } else {
+    console.log(
+      'Created a .gitignore file in your project root directory and added .envars.json to it'
+    )
+    await writeFile(
+      path.join(process.cwd(), '.gitignore'),
+      `${PROJECT_IDENTIFIER_FILE_NAME}\n`
+    )
+  }
+
+  const env_files = project.items.map((item) => item.file_name)
+
+  const file_write_promises = env_files.map(async (file_name) => {
+    const env_file = project.items.filter(
+      (item) => item.file_name === file_name
+    )[0]
+    const content = env_file.envars
+      .map((item) => `${item.key}=${item.value}`)
+      .join('\n')
+
+    await writeFile(path.join(process.cwd(), file_name), content)
+    return file_name
+  })
+
+  await Promise.all(file_write_promises)
+  console.log(`Pulled files ${env_files.join(', ')}`)
+}
+
 export const List = async () => {
   const data = await get_data_from_store()
 
@@ -179,4 +254,4 @@ export const Delete = async () => {
   console.log(`Project ${resp.to_delete} deleted successfully`)
 }
 
-Sync().catch((err) => console.error(err))
+Pull().catch((err) => console.error(err))
