@@ -1,14 +1,8 @@
-// - create
-// - list
-// - sync
-// - pull
-// - delete
-
 import path from 'path'
 import { get_random_string } from './utils'
 import { readFile, writeFile, appendFile, readdir } from 'fs/promises'
 import inquirer from 'inquirer'
-import { DATA_FILE_PATH } from './constants'
+import { DATA_FILE_PATH, PROJECT_IDENTIFIER_FILE_NAME } from './constants'
 
 interface Project {
   project_id: string
@@ -41,9 +35,9 @@ export const New = async () => {
   // check if user already has .envars.json file
   const user_files = await readdir(process.cwd())
 
-  if (user_files.includes('.envars.json')) {
+  if (user_files.includes(PROJECT_IDENTIFIER_FILE_NAME)) {
     const project_details_unparsed = await readFile(
-      path.join(process.cwd(), '.envars.json'),
+      path.join(process.cwd(), PROJECT_IDENTIFIER_FILE_NAME),
       'utf8'
     )
 
@@ -91,7 +85,7 @@ export const New = async () => {
   await writeFile(DATA_FILE_PATH, JSON.stringify(updated_projects))
 
   await writeFile(
-    path.join(process.cwd(), '.envars.json'),
+    path.join(process.cwd(), PROJECT_IDENTIFIER_FILE_NAME),
     JSON.stringify({
       project_id: new_project.project_id,
       project_name: new_project.project_name,
@@ -103,10 +97,16 @@ export const New = async () => {
       '.gitignore file already exists, added .envars.json to .gitignore'
     )
 
-    await appendFile(path.join(process.cwd(), '.gitignore'), `\n.envars.json`)
+    await appendFile(
+      path.join(process.cwd(), '.gitignore'),
+      `\n${PROJECT_IDENTIFIER_FILE_NAME}`
+    )
   } else {
     console.log('Created a .gitignore file in your project root directory')
-    await writeFile(path.join(process.cwd(), '.gitignore'), `.envars.json\n`)
+    await writeFile(
+      path.join(process.cwd(), '.gitignore'),
+      ` ${PROJECT_IDENTIFIER_FILE_NAME}\n`
+    )
   }
 
   console.log(`Project ${new_project.project_name} created successfully`)

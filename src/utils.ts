@@ -1,7 +1,8 @@
 import { randomBytes } from 'crypto'
-import { readFile } from 'fs/promises'
+import { readFile, readdir } from 'fs/promises'
 import path from 'path'
 import { parse } from 'dotenv'
+import { PROJECT_IDENTIFIER_FILE_NAME } from './constants'
 
 export const get_random_string = async () => {
   const buf = randomBytes(32)
@@ -77,3 +78,26 @@ export const read_users_dot_env = async () => {
 
   return user_envvars
 }
+
+export const serach_env_files = async () => {
+  console.log('Searching for files that start with .env')
+  const files = await readdir(path.join(process.cwd()))
+
+  let env_files = files.filter((file) => file.startsWith('.env'))
+
+  if (env_files.length === 0) {
+    console.log('No files found')
+    return []
+  }
+
+  env_files = env_files.filter((file) => file !== PROJECT_IDENTIFIER_FILE_NAME)
+
+  console.log('Found following files:')
+  env_files.forEach((file) => {
+    console.log(file)
+  })
+
+  return env_files
+}
+
+serach_env_files()

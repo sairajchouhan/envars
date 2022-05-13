@@ -7,4 +7,6 @@ const DATA_DIR_PATH = path.join(home || '~/', '.envars')
 
 const DATA_FILE_PATH = path.resolve(path.join(DATA_DIR_PATH, 'data.json'))
 
-export { DATA_FILE_PATH }
+const PROJECT_IDENTIFIER_FILE_NAME = '.envars.json'
+
+export { DATA_FILE_PATH, PROJECT_IDENTIFIER_FILE_NAME }
