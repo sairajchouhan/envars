@@ -2,7 +2,8 @@ import { randomBytes } from 'crypto'
 import { readFile, readdir } from 'fs/promises'
 import path from 'path'
 import { parse } from 'dotenv'
-import { PROJECT_IDENTIFIER_FILE_NAME } from './constants'
+import { DATA_FILE_PATH, PROJECT_IDENTIFIER_FILE_NAME } from './constants'
+import type { Project } from './types'
 
 export const get_random_string = async () => {
   const buf = randomBytes(32)
@@ -79,9 +80,7 @@ export const read_users_dot_env = async () => {
 }
 
 export const serach_env_files = async () => {
-  // console.log('Searching for files that start with .env')
   const files = await readdir(path.join(process.cwd()))
-
   let env_files = files.filter((file) => file.startsWith('.env'))
 
   if (env_files.length === 0) {
@@ -91,12 +90,16 @@ export const serach_env_files = async () => {
 
   env_files = env_files.filter((file) => file !== PROJECT_IDENTIFIER_FILE_NAME)
 
-  // console.log('Found following files:')
-  // env_files.forEach((file) => {
-  //   console.log(file)
-  // })
-
   return env_files
 }
 
-serach_env_files()
+export const get_data_from_store = async () => {
+  const data = await readFile(DATA_FILE_PATH, 'utf8')
+
+  if (typeof data === 'string' && data.trim() === '') {
+    return []
+  }
+
+  const parsed: Array<Project> = JSON.parse(data)
+  return parsed
+}

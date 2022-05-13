@@ -7,35 +7,9 @@ import { DATA_FILE_PATH, PROJECT_IDENTIFIER_FILE_NAME } from './constants'
 import {
   get_random_string,
   get_user_current_project_details,
+  get_data_from_store,
   serach_env_files,
 } from './utils'
-
-interface Project {
-  project_id: string
-  project_name: string
-  items: Array<EnvFile>
-}
-
-interface EnvFile {
-  file_name: string
-  envars: Array<EnvVarKeyValuePair>
-}
-
-type EnvVarKeyValuePair = {
-  key: string
-  value: string
-}
-
-const get_data_from_store = async () => {
-  const data = await readFile(DATA_FILE_PATH, 'utf8')
-
-  if (typeof data === 'string' && data.trim() === '') {
-    return []
-  }
-
-  const parsed: Array<Project> = JSON.parse(data)
-  return parsed
-}
 
 export const New = async () => {
   const user_files = await readdir(process.cwd())
