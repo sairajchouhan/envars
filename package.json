@@ -1,6 +1,6 @@
 {
   "name": "@sairaj2119/envars",
-  "version": "0.0.43",
+  "version": "0.0.44",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -14,9 +14,6 @@
   "bin": {
     "envars": "./dist/src/bin/index.js"
   },
-  "files": [
-    "dist"
-  ],
   "devDependencies": {
     "@types/inquirer": "^8.2.1",
     "@types/node": "^17.0.33",
