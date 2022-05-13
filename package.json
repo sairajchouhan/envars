@@ -1,12 +1,11 @@
 {
   "name": "@sairaj2119/envars",
-  "version": "0.0.42",
+  "version": "0.0.43",
   "description": "",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon",
     "build": "rm -rf ./dist && tsc",
-    "postinstall": "node ./src/setup.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [],
