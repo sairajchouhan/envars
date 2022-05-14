@@ -6,27 +6,37 @@ import { DATA_FILE_PATH, PROJECT_IDENTIFIER_FILE_NAME } from './constants'
 import type { Project } from './types'
 
 export const get_user_current_project_details = async () => {
-  const project_details_unparsed = await readFile(
-    path.join(process.cwd(), PROJECT_IDENTIFIER_FILE_NAME),
-    'utf8'
-  )
-
-  const project_details: {
-    project_id: string
-    project_name: string
-  } = JSON.parse(project_details_unparsed)
-
-  const project_id = project_details.project_id
-  const project_name = project_details.project_name
-
-  if (!project_id.trim() || !project_name.trim()) {
-    console.warn(
-      `Project is not initialized, or the data in ${PROJECT_IDENTIFIER_FILE_NAME} has been corrupted`
+  try {
+    const project_details_unparsed = await readFile(
+      path.join(process.cwd(), PROJECT_IDENTIFIER_FILE_NAME),
+      'utf8'
     )
-    return
-  }
 
-  return { project_id, project_name }
+    const project_details: {
+      project_id: string
+      project_name: string
+    } = JSON.parse(project_details_unparsed)
+
+    const project_id = project_details.project_id
+    const project_name = project_details.project_name
+
+    if (!project_id.trim() || !project_name.trim()) {
+      console.warn(
+        `Project is not initialized, or the data in ${PROJECT_IDENTIFIER_FILE_NAME} has been corrupted`
+      )
+      return
+    }
+
+    return { project_id, project_name }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    if (err.code === 'ENOENT') {
+      console.warn(
+        `Project is not initialized, initialize it by running 'envars new' or pull existing project by running 'envars pull'`
+      )
+      return
+    }
+  }
 }
 
 export const read_users_dot_env = async () => {

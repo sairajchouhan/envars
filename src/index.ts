@@ -253,5 +253,3 @@ export const Delete = async () => {
 
   console.log(`Project ${resp.to_delete} deleted successfully`)
 }
-
-Pull().catch((err) => console.error(err))
