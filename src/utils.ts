@@ -5,11 +5,6 @@ import { parse } from 'dotenv'
 import { DATA_FILE_PATH, PROJECT_IDENTIFIER_FILE_NAME } from './constants'
 import type { Project } from './types'
 
-export const get_random_string = async () => {
-  const buf = randomBytes(32)
-  return Buffer.from(buf).toString('hex')
-}
-
 export const get_user_current_project_details = async () => {
   const project_details_unparsed = await readFile(
     path.join(process.cwd(), PROJECT_IDENTIFIER_FILE_NAME),
@@ -33,8 +28,6 @@ export const get_user_current_project_details = async () => {
 
   return { project_id, project_name }
 }
-
-
 
 export const read_users_dot_env = async () => {
   const user_envvars_string = await readFile(
@@ -69,4 +62,18 @@ export const get_data_from_store = async () => {
 
   const parsed: Array<Project> = JSON.parse(data)
   return parsed
+}
+
+export const get_random_string = async () => {
+  const buf = randomBytes(32)
+  return Buffer.from(buf).toString('hex')
+}
+
+export const get_package_json = async () => {
+  const pkjson_string = await readFile(
+    path.join(process.cwd(), 'package.json'),
+    'utf8'
+  )
+  const pkjson = JSON.parse(pkjson_string)
+  return pkjson
 }
