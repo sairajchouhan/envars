@@ -1,5 +1,5 @@
 import path from 'path'
-import { readFile, writeFile, appendFile, readdir } from 'fs/promises'
+import { readFile, writeFile, appendFile, readdir, unlink } from 'fs/promises'
 import inquirer from 'inquirer'
 import { parse } from 'dotenv'
 
@@ -250,6 +250,11 @@ export const Delete = async () => {
     JSON.stringify(updated_projects.length > 0 ? updated_projects : []),
     'utf8'
   )
+  try {
+    await unlink(path.join(process.cwd(), PROJECT_IDENTIFIER_FILE_NAME))
+  } catch (err) {
+    //
+  }
 
   console.log(`Project ${resp.to_delete} deleted successfully`)
 }
