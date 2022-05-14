@@ -137,30 +137,42 @@ export const Sync = async () => {
 
 export const Pull = async () => {
   const user_files = await readdir(process.cwd())
+  const project_name: { value: string } = { value: '' }
 
   if (user_files.includes(PROJECT_IDENTIFIER_FILE_NAME)) {
-    return console.log(
-      'Project is already initialized, please use sync command to sync your enviorment vairables'
-    )
+    const resp = await get_user_current_project_details()
+    if (!resp || !resp.project_id.trim() || !resp.project_name.trim()) {
+      console.log('Someting went wrong')
+      return
+    }
+    project_name.value = resp.project_name
   }
 
   const store_data = await get_data_from_store()
-  const choices = store_data.map((item) => item.project_name)
 
-  const resp = await inquirer.prompt({
-    type: 'list',
-    name: 'project_name',
-    message: 'Select project to pull from: ',
-    choices,
-  })
+  if (!project_name.value) {
+    const choices = store_data.map((item) => item.project_name)
+    const ans = await inquirer.prompt({
+      type: 'list',
+      name: 'project_name',
+      message: 'Select project to pull from: ',
+      choices,
+    })
+    project_name.value = ans.project_name
+  }
+
+  if (project_name.value.trim() === '') {
+    console.log('Project name is empty')
+    return
+  }
 
   const project = store_data.find(
     (item) =>
-      item.project_name.toLowerCase() === resp.project_name.toLowerCase()
+      item.project_name.toLowerCase() === project_name.value.toLowerCase()
   )
 
   if (!project) {
-    return console.error(`Project with name ${resp.project_name} not found`)
+    return console.error(`Project with name ${project_name.value} not found`)
   }
 
   await writeFile(
