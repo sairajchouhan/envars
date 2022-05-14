@@ -1,13 +1,14 @@
 {
   "name": "@sairaj2119/envars",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "CLI tool to save environment variables and reuse it later",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon",
     "build": "rm -rf ./dist && tsc",
     "prepublishOnly": "npm run build",
-    "postinstall": "node dist/setup.js"
+    "postinstall": "node dist/setup.js",
+    "release": "npx bumpp --commit --push --tag"
   },
   "keywords": [
     "env",
