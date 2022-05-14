@@ -80,10 +80,11 @@ export const get_random_string = async () => {
 }
 
 export const get_package_json = async () => {
-  const pkjson_string = await readFile(
-    path.join(process.cwd(), 'package.json'),
-    'utf8'
-  )
-  const pkjson = JSON.parse(pkjson_string)
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const pkjson = await import('../package.json')
+  console.log(pkjson.version)
   return pkjson
 }
+
+get_package_json()
