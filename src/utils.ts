@@ -83,8 +83,5 @@ export const get_package_json = async () => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const pkjson = await import('../package.json')
-  console.log(pkjson.version)
   return pkjson
 }
-
-get_package_json()

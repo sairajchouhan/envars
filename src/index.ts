@@ -183,8 +183,6 @@ export const Pull = async () => {
     })
   )
 
-  console.log('Created .envars.json file in your project root directory')
-
   if (user_files.includes('.gitignore')) {
     console.log(
       '.gitignore file already exists, added .envars.json to .gitignore'
