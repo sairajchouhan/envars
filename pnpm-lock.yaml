@@ -5,6 +5,7 @@ specifiers:
   '@types/node': ^17.0.33
   '@typescript-eslint/eslint-plugin': ^5.23.0
   '@typescript-eslint/parser': ^5.23.0
+  chalk: 4.1.2
   commander: ^9.2.0
   dotenv: ^16.0.1
   esbuild: ^0.14.39
@@ -12,14 +13,17 @@ specifiers:
   eslint: ^8.15.0
   eslint-config-prettier: ^8.5.0
   inquirer: ^8.2.4
+  log-symbols: ^5.1.0
   nodemon: ^2.0.16
   prettier: ^2.6.2
   typescript: ^4.6.4
 
 dependencies:
+  chalk: 4.1.2
   commander: 9.2.0
   dotenv: 16.0.1
   inquirer: 8.2.4
+  log-symbols: 5.1.0
 
 devDependencies:
   '@types/inquirer': 8.2.1
@@ -412,6 +416,11 @@ packages:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
+
+  /chalk/5.0.1:
+    resolution: {integrity: sha512-Fo07WOYGqMfCWHOzSXOt2CxDbC6skS/jO9ynEcmpANMoPrD+W1r1K6Vx7iNm+AQmETU1Xr2t+n8nzkV9t6xh3w==}
+    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
+    dev: false
 
   /chardet/0.7.0:
     resolution: {integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==}
@@ -1303,6 +1312,11 @@ packages:
     engines: {node: '>=10'}
     dev: false
 
+  /is-unicode-supported/1.2.0:
+    resolution: {integrity: sha512-wH+U77omcRzevfIG8dDhTS0V9zZyweakfD01FULl97+0EHiJTTZtJqxPSkIIo/SDPv/i07k/C9jAPY+jwLLeUQ==}
+    engines: {node: '>=12'}
+    dev: false
+
   /is-yarn-global/0.3.0:
     resolution: {integrity: sha512-VjSeb/lHmkoyd8ryPVIKvOCn4D1koMqY+vqyjjUfc3xyKtP4dYOxM44sZrnqQSzSds3xyOrUTLTC9LVCVgLngw==}
     dev: true
@@ -1365,6 +1379,14 @@ packages:
     dependencies:
       chalk: 4.1.2
       is-unicode-supported: 0.1.0
+    dev: false
+
+  /log-symbols/5.1.0:
+    resolution: {integrity: sha512-l0x2DvrW294C9uDCoQe1VSU4gf529FkSZ6leBl4TiqZH/e+0R7hSfHQBNut2mNygDgHwvYHfFLn6Oxb3VWj2rA==}
+    engines: {node: '>=12'}
+    dependencies:
+      chalk: 5.0.1
+      is-unicode-supported: 1.2.0
     dev: false
 
   /lowercase-keys/1.0.1:

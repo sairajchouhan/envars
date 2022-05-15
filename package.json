@@ -2,7 +2,7 @@
   "name": "@sairaj2119/envars",
   "version": "0.0.71",
   "description": "CLI tool to save environment variables and reuse it later",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon",
     "build": "rm -rf ./dist && tsc",
@@ -36,8 +36,13 @@
     "typescript": "^4.6.4"
   },
   "dependencies": {
+    "chalk": "4.1.2",
     "commander": "^9.2.0",
     "dotenv": "^16.0.1",
-    "inquirer": "^8.2.4"
+    "inquirer": "^8.2.4",
+    "log-symbols": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

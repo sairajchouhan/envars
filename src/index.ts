@@ -9,6 +9,10 @@ import {
   get_user_current_project_details,
   get_data_from_store,
   serach_env_files,
+  log,
+  yellow,
+  yellow_bold,
+  error,
 } from './utils'
 
 export const New = async () => {
@@ -21,17 +25,19 @@ export const New = async () => {
     )
 
     const project_details =
-      project_details_unparsed === ''
-        ? {}
-        : JSON.parse(project_details_unparsed)
+      project_details_unparsed === '' ? {} : JSON.parse(project_details_unparsed)
 
     const a: string = project_details.project_id
     const b: string = project_details.project_name
 
     if (a && b && a.trim() !== '' && b.trim() !== '') {
-      console.log('A project already exists in the current directory')
-      console.log(project_details)
-      console.log(`Project Name: ${project_details.project_name}`)
+      log(
+        `A project with name ${yellow_bold(
+          b
+        )} exists in your current directory, please run ${yellow_bold(
+          'envars pull'
+        )} to pull the environment variables`
+      )
       return
     }
   }
@@ -44,14 +50,10 @@ export const New = async () => {
 
   const projects = await get_data_from_store()
 
-  const all_project_names = projects.map((item) =>
-    item.project_name.toLowerCase()
-  )
+  const all_project_names = projects.map((item) => item.project_name.toLowerCase())
 
   if (all_project_names.includes(resp.project_name.toLowerCase())) {
-    return console.error(
-      `Project with name ${resp.project_name} already exists`
-    )
+    return log(`Project with name ${yellow_bold(resp.project_name)} already exists`)
   }
 
   const new_project = {
@@ -72,28 +74,22 @@ export const New = async () => {
   )
 
   if (user_files.includes('.gitignore')) {
-    console.log(
-      '.gitignore file already exists, added .envars.json to .gitignore'
+    log(
+      `${yellow_bold('.gitignore')} already exists, added ${yellow_bold(
+        '.envars.json'
+      )} to ${yellow_bold('.gitignore')}`
     )
-
-    await appendFile(
-      path.join(process.cwd(), '.gitignore'),
-      `\n${PROJECT_IDENTIFIER_FILE_NAME}`
-    )
+    await appendFile(path.join(process.cwd(), '.gitignore'), `\n${PROJECT_IDENTIFIER_FILE_NAME}`)
   } else {
-    console.log('Created a .gitignore file in your project root directory')
-    await writeFile(
-      path.join(process.cwd(), '.gitignore'),
-      `${PROJECT_IDENTIFIER_FILE_NAME}\n`
-    )
+    log(`Created a ${yellow('.gitignore')} file in your project root directory`)
+    await writeFile(path.join(process.cwd(), '.gitignore'), `${PROJECT_IDENTIFIER_FILE_NAME}\n`)
   }
 
-  console.log(`Project ${new_project.project_name} created successfully`)
+  log(`Project ${yellow_bold(new_project.project_name)} created successfully`)
 }
 
 // TODO: create a type file that has the currently env variables types, so that the user can get some autocompelte
 export const Sync = async () => {
-  console.log('Syncing project...')
   const project_details = await get_user_current_project_details()
 
   if (!project_details) {
@@ -105,14 +101,14 @@ export const Sync = async () => {
   const project = projects.find((item) => item.project_id === project_id)
 
   if (!project) {
-    return console.error(`Project with id ${project_id} not found`)
+    return log(error(`Project with id ${project_id} not found`))
   }
 
   const projectIndex = projects.indexOf(project)
 
   const env_files = await serach_env_files()
   if (env_files.length === 0) {
-    return console.error('No env files found')
+    return log(error('No env files found'))
   }
 
   const file_read_promises = env_files.map(async (file) => {
@@ -132,7 +128,7 @@ export const Sync = async () => {
 
   await writeFile(DATA_FILE_PATH, JSON.stringify(projects))
 
-  console.log(`Synced files ${env_files.map((file) => `${file} `).join('')}`)
+  log(`Synced filesn\n ${env_files.map((file) => `${yellow_bold(file)} `).join('')}`)
 }
 
 export const Pull = async () => {
@@ -142,7 +138,6 @@ export const Pull = async () => {
   if (user_files.includes(PROJECT_IDENTIFIER_FILE_NAME)) {
     const resp = await get_user_current_project_details()
     if (!resp || !resp.project_id.trim() || !resp.project_name.trim()) {
-      console.log('Someting went wrong')
       return
     }
     project_name.value = resp.project_name
@@ -162,17 +157,16 @@ export const Pull = async () => {
   }
 
   if (project_name.value.trim() === '') {
-    console.log('Project name is empty')
+    log(error('Project name is empty'))
     return
   }
 
   const project = store_data.find(
-    (item) =>
-      item.project_name.toLowerCase() === project_name.value.toLowerCase()
+    (item) => item.project_name.toLowerCase() === project_name.value.toLowerCase()
   )
 
   if (!project) {
-    return console.error(`Project with name ${project_name.value} not found`)
+    return log(error(`Project with name ${project_name.value} not found`))
   }
 
   await writeFile(
@@ -184,54 +178,41 @@ export const Pull = async () => {
   )
 
   if (user_files.includes('.gitignore')) {
-    console.log(
-      '.gitignore file already exists, added .envars.json to .gitignore'
+    log(
+      `${yellow('.gitignore')} already exists, added ${yellow('.envars.json')} to ${yellow(
+        '.gitignore'
+      )}`
     )
-
-    await appendFile(
-      path.join(process.cwd(), '.gitignore'),
-      `\n${PROJECT_IDENTIFIER_FILE_NAME}`
-    )
+    await appendFile(path.join(process.cwd(), '.gitignore'), `\n${PROJECT_IDENTIFIER_FILE_NAME}`)
   } else {
-    console.log(
-      'Created a .gitignore file in your project root directory and added .envars.json to it'
-    )
-    await writeFile(
-      path.join(process.cwd(), '.gitignore'),
-      `${PROJECT_IDENTIFIER_FILE_NAME}\n`
-    )
+    log(`Created a ${yellow('.gitignore')} file in your project root directory`)
+    await writeFile(path.join(process.cwd(), '.gitignore'), `${PROJECT_IDENTIFIER_FILE_NAME}\n`)
   }
 
   const env_files = project.items.map((item) => item.file_name)
 
   const file_write_promises = env_files.map(async (file_name) => {
-    const env_file = project.items.filter(
-      (item) => item.file_name === file_name
-    )[0]
-    const content = env_file.envars
-      .map((item) => `${item.key}=${item.value}`)
-      .join('\n')
+    const env_file = project.items.filter((item) => item.file_name === file_name)[0]
+    const content = env_file.envars.map((item) => `${item.key}=${item.value}`).join('\n')
 
     await writeFile(path.join(process.cwd(), file_name), content)
     return file_name
   })
 
   await Promise.all(file_write_promises)
-  console.log(`Pulled files ${env_files.join(', ')}`)
+  log(`Pulled Files \n ${env_files.map((file) => `${yellow_bold(file)} `).join('')}`)
 }
 
 export const List = async () => {
   const data = await get_data_from_store()
 
   if (data.length === 0) {
-    return console.log(
-      "No Projects found, try creating one using 'new' command"
-    )
+    return log(error("No Projects found, try creating one using 'new' command"))
   }
 
-  console.log('Your Projects')
+  log('Your Projects')
   data.forEach((i) => {
-    console.log(`${i.project_name}\n`)
+    log(yellow_bold(`${i.project_name}\n`))
   })
 }
 
@@ -239,9 +220,7 @@ export const Delete = async () => {
   const projects = await get_data_from_store()
 
   if (projects.length === 0) {
-    return console.log(
-      "No Projects found, try creating one using 'new' command"
-    )
+    return log(error("No Projects found, try creating one using 'new' command"))
   }
 
   const resp = await inquirer.prompt({
@@ -251,9 +230,7 @@ export const Delete = async () => {
     choices: projects.map((item) => item.project_name),
   })
 
-  const updated_projects = projects.filter(
-    (item) => item.project_name !== resp.to_delete
-  )
+  const updated_projects = projects.filter((item) => item.project_name !== resp.to_delete)
 
   await writeFile(
     DATA_FILE_PATH,
@@ -266,5 +243,5 @@ export const Delete = async () => {
     //
   }
 
-  console.log(`Project ${resp.to_delete} deleted successfully`)
+  log(`Project ${yellow_bold(resp.to_delete)} deleted successfully`)
 }

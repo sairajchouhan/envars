@@ -2,7 +2,7 @@
 
 import { Command } from 'commander'
 import { List, New, Pull, Sync, Delete } from './index'
-import { get_package_json } from './utils'
+import { get_package_json, log, yellow } from './utils'
 //
 ;(async () => {
   const program = new Command()
@@ -15,9 +15,7 @@ import { get_package_json } from './utils'
 
   program
     .command('new')
-    .description(
-      'Creates a new project where can save your enviornment variables'
-    )
+    .description('Creates a new project where can save your enviornment variables')
     .action(() => {
       New()
     })
@@ -25,7 +23,8 @@ import { get_package_json } from './utils'
   program
     .command('sync')
     .description('Syncs enviornment variables to data store')
-    .action(() => {
+    .action(async () => {
+      log(yellow('Syncing project...\n'))
       Sync()
     })
 
