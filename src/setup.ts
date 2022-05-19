@@ -1,8 +1,9 @@
 import { writeFile, mkdir, readdir } from 'fs/promises'
 import { join } from 'path'
 
-const home =
-  process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME
+console.log('testing github desktop')
+
+const home = process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME
 
 const data_dir_path = join(home || '~/', '.envars')
 
