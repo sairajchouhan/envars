@@ -49,5 +49,12 @@ import { get_package_json, log, yellow } from './utils'
       Delete()
     })
 
+  program
+    .command('generate')
+    .description('Generates types for a chosesn env file in a project')
+    .action(() => {
+      log('Generating types...')
+    })
+
   program.parse()
 })()
