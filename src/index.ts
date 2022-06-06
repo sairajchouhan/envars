@@ -128,7 +128,7 @@ export const Sync = async () => {
 
   await writeFile(DATA_FILE_PATH, JSON.stringify(projects))
 
-  log(`Synced filesn\n ${env_files.map((file) => `${yellow_bold(file)} `).join('')}`)
+  log(`Synced files\n ${env_files.map((file) => ` ${yellow_bold(file)} `).join('')}`)
 }
 
 export const Pull = async () => {
