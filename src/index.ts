@@ -4,7 +4,7 @@ import inquirer from 'inquirer'
 import { parse } from 'dotenv'
 
 import { DATA_FILE_PATH, PROJECT_IDENTIFIER_FILE_NAME } from './constants'
-import { check_file_exsits, generate_types } from './utils'
+import { generate_types } from './utils'
 import {
   get_random_string,
   get_user_current_project_details,
@@ -89,7 +89,6 @@ export const New = async () => {
   log(`Project ${yellow_bold(new_project.project_name)} created successfully`)
 }
 
-// TODO: create a type file that has the currently env variables types, so that the user can get some autocompelte
 export const Sync = async () => {
   const project_details = await get_user_current_project_details()
 
@@ -126,15 +125,29 @@ export const Sync = async () => {
 
   const items = await Promise.all(file_read_promises)
   projects[projectIndex].items = items
-
   await writeFile(DATA_FILE_PATH, JSON.stringify(projects))
 
-  const types_file_exists = await check_file_exsits(path.join(process.cwd(), 'app.d.ts'))
-
-  if (types_file_exists) {
-    log(`Generating types for env variables ${yellow_bold('app.d.ts')}`)
+  if (!project_details.env_file_for_types.trim()) {
+    return log(
+      error(
+        'No types file found, generate one using "envars generate" and then every time you sync, types will be automatically generated for you :)'
+      )
+    )
   }
 
+  log(`\nGenerating types...`)
+  const file_content = await readFile(
+    path.join(process.cwd(), project_details.env_file_for_types),
+    'utf8'
+  )
+  const parsed = parse(file_content)
+  await generate_types(parsed)
+
+  log(
+    `Generated types for enviornment variables in file ${yellow_bold(
+      project_details.env_file_for_types
+    )}`
+  )
   log(`Synced files\n ${env_files.map((file) => ` ${yellow_bold(file)} `).join('')}`)
 }
 
@@ -254,15 +267,6 @@ export const Delete = async () => {
 }
 
 export const Generate = async () => {
-  // have to generate types for the selected env file in a project
-  //✅ 1) Get all the env files the user has
-  //✅ 2) Ask user to select one
-  //✅ 3) Get the env file content
-  //✅ 4) Parse the content
-  //✅ 5) Store the name of the file in .envars.json
-  //✅ 6) generate types for selected env vars
-  // - Create environment.d.ts file
-  // - Fill the types in it
   const content = await get_user_current_project_details()
 
   if (!content) {
@@ -270,6 +274,9 @@ export const Generate = async () => {
   }
 
   const env_files = await serach_env_files()
+  if (!env_files || env_files.length === 0) {
+    return log(error('No env files found'))
+  }
 
   const ans = await inquirer.prompt({
     type: 'list',
@@ -278,11 +285,10 @@ export const Generate = async () => {
     choices: env_files,
   })
 
+  log(`Generating types for env variables in ${yellow_bold(ans.env_file)} ...`)
   const file_content = await readFile(path.join(process.cwd(), ans.env_file), 'utf8')
   const parsed = parse(file_content)
-
   content.env_file_for_types = ans.env_file
-
   const writePath = path.join(process.cwd(), PROJECT_IDENTIFIER_FILE_NAME)
   await writeFile(writePath, JSON.stringify(content))
 

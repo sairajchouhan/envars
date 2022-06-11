@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander'
-import { List, New, Pull, Sync, Delete } from './index'
-import { get_package_json, log, yellow } from './utils'
+import { List, New, Pull, Sync, Delete, Generate } from './index'
+import { get_package_json, log } from './utils'
 //
 ;(async () => {
   const program = new Command()
@@ -24,7 +24,7 @@ import { get_package_json, log, yellow } from './utils'
     .command('sync')
     .description('Syncs enviornment variables to data store')
     .action(async () => {
-      log(yellow('Syncing project...\n'))
+      log('Syncing project...')
       Sync()
     })
 
@@ -54,6 +54,7 @@ import { get_package_json, log, yellow } from './utils'
     .description('Generates types for a chosesn env file in a project')
     .action(() => {
       log('Generating types...')
+      Generate()
     })
 
   program.parse()

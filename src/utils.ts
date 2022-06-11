@@ -137,7 +137,7 @@ export const generate_types = async (envars: DotenvParseOutput) => {
     interface ProcessEnv {
     ${Object.keys(envars)
       .map((key) => `\t${key}: string;`)
-      .join('\n\t')}
+      .join('\n\t\t')}
     }
 }`.trim()
 

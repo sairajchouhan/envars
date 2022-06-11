@@ -8,7 +8,8 @@
     "build": "rm -rf ./dist && tsc",
     "prepublishOnly": "npm run build",
     "postinstall": "node dist/setup.js",
-    "release": "npx bumpp --commit --push --tag"
+    "release": "npx bumpp --commit --push --tag",
+    "bni": "npm un -g @sairaj2119/envars  && npm run build && npm i -g ."
   },
   "keywords": [
     "env",
