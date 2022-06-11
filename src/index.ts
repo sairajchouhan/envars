@@ -4,6 +4,7 @@ import inquirer from 'inquirer'
 import { parse } from 'dotenv'
 
 import { DATA_FILE_PATH, PROJECT_IDENTIFIER_FILE_NAME } from './constants'
+import { check_file_exsits } from './utils';
 import {
   get_random_string,
   get_user_current_project_details,
@@ -127,6 +128,13 @@ export const Sync = async () => {
   projects[projectIndex].items = items
 
   await writeFile(DATA_FILE_PATH, JSON.stringify(projects))
+
+  const types_file_exists = await check_file_exsits(path.join(process.cwd(), 'app.d.ts'))
+
+  if(types_file_exists){
+    log(`Generating types for env variables ${yellow_bold('app.d.ts')}`)
+
+  }
 
   log(`Synced files\n ${env_files.map((file) => ` ${yellow_bold(file)} `).join('')}`)
 }

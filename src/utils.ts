@@ -1,15 +1,19 @@
 import { randomBytes } from 'crypto'
-import { readFile, readdir } from 'fs/promises'
+import { readFile, readdir, writeFile } from 'fs/promises'
 import path from 'path'
 import { parse } from 'dotenv'
 import chalk from 'chalk'
 
 import { DATA_FILE_PATH, PROJECT_IDENTIFIER_FILE_NAME } from './constants'
 import type { Project } from './types'
+import { EnvFile } from './types'
 
 export const get_user_current_project_details = async () => {
   try {
-    const project_details_unparsed = await readFile(path.join(process.cwd(), PROJECT_IDENTIFIER_FILE_NAME), 'utf8')
+    const project_details_unparsed = await readFile(
+      path.join(process.cwd(), PROJECT_IDENTIFIER_FILE_NAME),
+      'utf8'
+    )
 
     const project_details: {
       project_id: string
@@ -20,7 +24,9 @@ export const get_user_current_project_details = async () => {
     const project_name = project_details.project_name
 
     if (!project_id.trim() || !project_name.trim()) {
-      console.warn(`Project is not initialized, or the data in ${PROJECT_IDENTIFIER_FILE_NAME} has been corrupted`)
+      console.warn(
+        `Project is not initialized, or the data in ${PROJECT_IDENTIFIER_FILE_NAME} has been corrupted`
+      )
       return
     }
 
@@ -92,4 +98,33 @@ export const yellow_bold = (arg: string) => {
 
 export const error = (arg: string) => {
   return chalk.blue.bgRed.bold(arg)
+}
+
+export const check_file_exsits = async (file_path: string) => {
+  try {
+    await readFile(file_path, 'utf8')
+    return true
+  } catch (err) {
+    return false
+  }
+}
+
+export const create_empty_types_file = async (): Promise<boolean> => {
+  const templete = `declare namespace NodeJS {
+interface ProcessEnv {
+  
+  }
+}`
+
+  try {
+    await writeFile(`${path.join(process.cwd(), 'app.d.ts')}`, JSON.stringify(templete))
+    return true
+  } catch (err) {
+    console.error(err)
+    return false
+  }
+}
+
+export const generate_types_for_one_env_file = async (envars: EnvFile) => {
+  return null
 }
