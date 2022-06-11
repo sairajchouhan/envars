@@ -1,12 +1,11 @@
 import { randomBytes } from 'crypto'
 import { readFile, readdir, writeFile } from 'fs/promises'
 import path from 'path'
-import { parse } from 'dotenv'
+import { DotenvParseOutput, parse } from 'dotenv'
 import chalk from 'chalk'
 
 import { DATA_FILE_PATH, PROJECT_IDENTIFIER_FILE_NAME } from './constants'
 import type { Project } from './types'
-import { EnvFile } from './types'
 
 export const get_user_current_project_details = async () => {
   try {
@@ -18,10 +17,12 @@ export const get_user_current_project_details = async () => {
     const project_details: {
       project_id: string
       project_name: string
+      env_file_for_types: string
     } = JSON.parse(project_details_unparsed)
 
     const project_id = project_details.project_id
     const project_name = project_details.project_name
+    const env_file_for_types = project_details.env_file_for_types
 
     if (!project_id.trim() || !project_name.trim()) {
       console.warn(
@@ -30,7 +31,7 @@ export const get_user_current_project_details = async () => {
       return
     }
 
-    return { project_id, project_name }
+    return { project_id, project_name, env_file_for_types } || {}
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     if (err.code === 'ENOENT') {
@@ -125,6 +126,26 @@ interface ProcessEnv {
   }
 }
 
-export const generate_types_for_one_env_file = async (envars: EnvFile) => {
-  return null
+export const generate_types = async (envars: DotenvParseOutput) => {
+  const types_file_path = path.join(process.cwd(), 'app.d.ts')
+  const types_file_exists = await check_file_exsits(types_file_path)
+
+  if (!types_file_exists) {
+    await create_empty_types_file()
+  }
+  const templete = `declare namespace NodeJS {
+    interface ProcessEnv {
+    ${Object.keys(envars)
+      .map((key) => `\t${key}: string;`)
+      .join('\n\t')}
+    }
+}`.trim()
+
+  try {
+    await writeFile(types_file_path, templete)
+    return true
+  } catch (err) {
+    console.error(err)
+    return false
+  }
 }

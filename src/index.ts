@@ -4,7 +4,7 @@ import inquirer from 'inquirer'
 import { parse } from 'dotenv'
 
 import { DATA_FILE_PATH, PROJECT_IDENTIFIER_FILE_NAME } from './constants'
-import { check_file_exsits } from './utils';
+import { check_file_exsits, generate_types } from './utils'
 import {
   get_random_string,
   get_user_current_project_details,
@@ -131,9 +131,8 @@ export const Sync = async () => {
 
   const types_file_exists = await check_file_exsits(path.join(process.cwd(), 'app.d.ts'))
 
-  if(types_file_exists){
+  if (types_file_exists) {
     log(`Generating types for env variables ${yellow_bold('app.d.ts')}`)
-
   }
 
   log(`Synced files\n ${env_files.map((file) => ` ${yellow_bold(file)} `).join('')}`)
@@ -252,4 +251,40 @@ export const Delete = async () => {
   }
 
   log(`Project ${yellow_bold(resp.to_delete)} deleted successfully`)
+}
+
+export const Generate = async () => {
+  // have to generate types for the selected env file in a project
+  //✅ 1) Get all the env files the user has
+  //✅ 2) Ask user to select one
+  //✅ 3) Get the env file content
+  //✅ 4) Parse the content
+  //✅ 5) Store the name of the file in .envars.json
+  //✅ 6) generate types for selected env vars
+  // - Create environment.d.ts file
+  // - Fill the types in it
+  const content = await get_user_current_project_details()
+
+  if (!content) {
+    return log(error('No project found, intialize a project using `new` command'))
+  }
+
+  const env_files = await serach_env_files()
+
+  const ans = await inquirer.prompt({
+    type: 'list',
+    name: 'env_file',
+    message: 'Select env file to generate types for: ',
+    choices: env_files,
+  })
+
+  const file_content = await readFile(path.join(process.cwd(), ans.env_file), 'utf8')
+  const parsed = parse(file_content)
+
+  content.env_file_for_types = ans.env_file
+
+  const writePath = path.join(process.cwd(), PROJECT_IDENTIFIER_FILE_NAME)
+  await writeFile(writePath, JSON.stringify(content))
+
+  await generate_types(parsed)
 }
