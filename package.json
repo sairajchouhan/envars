@@ -1,6 +1,6 @@
 {
   "name": "@sairaj2119/envars",
-  "version": "0.0.72",
+  "version": "0.0.73",
   "description": "CLI tool to save environment variables and reuse it later",
   "main": "dist/index.js",
   "scripts": {
